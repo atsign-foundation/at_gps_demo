@@ -154,8 +154,8 @@ List<int> bufferMe(
         query = query.trimLeft();
         var json = jsonDecode(query.toString());
         Map send = {};
-        send['lat'] = (json['lat'].toString());
-        send['lon'] = (json['lon'].toString());
+        send['latitude'] = (json['lat'].toString());
+        send['longitude'] = (json['lon'].toString());
         send['speed'] = (json['speed'].toString());
 
         var sender = jsonEncode(send);
