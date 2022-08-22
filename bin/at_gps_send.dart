@@ -67,8 +67,8 @@ void main(List<String> args) async {
       throw ('\n Unable to find .atKeys file : $atsignFile');
     }
     port = int.parse(results['port']);
-    if((port<1024) | (port > 65535)){
-    throw ('\n port must be greater than 1024 and less than 65535');
+    if ((port < 1024) | (port > 65535)) {
+      throw ('\n port must be greater than 1024 and less than 65535');
     }
   } catch (e) {
     print(parser.usage);
@@ -86,11 +86,13 @@ void main(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
+    ..hiveStoragePath =
+        '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
+    ..commitLogPath =
+        '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..rootDomain = rootDomain
     ..atKeysFilePath = atsignFile;
   AtOnboardingService onboardingService =
@@ -163,6 +165,7 @@ List<int> bufferMe(
         query = query.trimLeft();
         var json = jsonDecode(query.toString());
         Map send = {};
+        send['device'] = deviceName;
         send['latitude'] = (json['lat'].toString());
         send['longitude'] = (json['lon'].toString());
         send['Speed'] = (json['speed'].toString());
@@ -189,24 +192,11 @@ void sendGps(
     NotificationService notificationService,
     AtSignLogger logger,
     String input) async {
-  var metaData = Metadata()
-    ..isPublic = false
-    ..isEncrypted = true
-    ..namespaceAware = true
-    ..ttr = -1
-    ..ttl = 10000;
-
-  var key = AtKey()
-    ..key = deviceName
-    ..sharedBy = fromAtsign
-    ..sharedWith = toAtsign
-    ..namespace = nameSpace
-    ..metadata = metaData;
   if (!(input == "")) {
     try {
-      await notificationService
-          .notify(NotificationParams.forUpdate(key, value: input),
-              onSuccess: (notification) {
+      await notificationService.notify(
+          NotificationParams.forText(input, toAtsign, shouldEncrypt: true),
+          onSuccess: (notification) {
         logger.info('SUCCESS:$notification');
       }, onError: (notification) {
         logger.info('ERROR:$notification');
