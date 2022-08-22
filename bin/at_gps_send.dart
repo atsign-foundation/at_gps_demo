@@ -28,10 +28,15 @@ void main(List<String> args) async {
   parser.addOption('atsign', abbr: 'a', mandatory: true, help: 'Your atSign');
   parser.addOption('toatsign',
       abbr: 't', mandatory: true, help: 'Send data to this atSign');
-  parser.addOption('device-name', abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
+  parser.addOption('port',
+      abbr: 'p',
+      mandatory: false,
+      help: 'Alternative port for GPS data',
+      defaultsTo: '2947');
+  parser.addOption('device-name',
+      abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
 
   parser.addFlag('verbose', abbr: 'v', help: 'More logging');
-
 
 // Check the arguments
   dynamic results;
@@ -61,6 +66,10 @@ void main(List<String> args) async {
     if (!await fileExists(atsignFile)) {
       throw ('\n Unable to find .atKeys file : $atsignFile');
     }
+    port = int.parse(results['port']);
+    if((port<1024) | (port > 65535)){
+    throw ('\n port must be greater than 1024 and less than 65535');
+    }
   } catch (e) {
     print(parser.usage);
     print(e);
@@ -77,11 +86,11 @@ void main(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
+    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
+    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..rootDomain = rootDomain
     ..atKeysFilePath = atsignFile;
   AtOnboardingService onboardingService =
@@ -113,8 +122,8 @@ void main(List<String> args) async {
 
   try {
     socket.listen((List<int> event) {
-      dataBuffer = bufferMe(event, dataBuffer, fromAtsign, toAtsign, nameSpace,deviceName,
-          notificationService, logger);
+      dataBuffer = bufferMe(event, dataBuffer, fromAtsign, toAtsign, nameSpace,
+          deviceName, notificationService, logger);
     });
 
     var send = '?WATCH={"enable":true,"json":true};';
@@ -156,12 +165,12 @@ List<int> bufferMe(
         Map send = {};
         send['latitude'] = (json['lat'].toString());
         send['longitude'] = (json['lon'].toString());
-        send['speed'] = (json['speed'].toString());
+        send['Speed'] = (json['speed'].toString());
 
         var sender = jsonEncode(send);
         print(sender);
-        sendGps(fromAtsign, toAtsign, nameSpace, deviceName, notificationService, logger,
-            sender);
+        sendGps(fromAtsign, toAtsign, nameSpace, deviceName,
+            notificationService, logger, sender);
       } catch (e) {
         print(e.toString());
       }

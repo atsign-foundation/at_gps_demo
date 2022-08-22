@@ -106,13 +106,11 @@ Future <void> snmpMqtt(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    //..qrCodePath = 'etc/qrcode_blueamateurbinding.png'
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
+    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
-    //..cramSecret = '<your cram secret>';
+    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..atKeysFilePath = atsignFile;
 
   AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
@@ -136,24 +134,24 @@ Future <void> snmpMqtt(List<String> args) async {
 
 //Waiting for sync breaks stuff for now
 // As we only use notifications thats just fine
-  // bool syncComplete = false;
-  // void onSyncDone(syncResult) {
-  //   _logger.info("syncResult.syncStatus: ${syncResult.syncStatus}");
-  //   _logger.info("syncResult.lastSyncedOn ${syncResult.lastSyncedOn}");
-  //   syncComplete = true;
-  // }
+  bool syncComplete = false;
+  void onSyncDone(syncResult) {
+    logger.info("syncResult.syncStatus: ${syncResult.syncStatus}");
+    logger.info("syncResult.lastSyncedOn ${syncResult.lastSyncedOn}");
+    syncComplete = true;
+  }
 
-  // // Wait for initial sync to complete
-  // _logger.info("Waiting for initial sync");
-  // syncComplete = false;
-  // atClientManager.syncService.sync(onDone: onSyncDone);
-  // while (!syncComplete) {
-  //   await Future.delayed(Duration(milliseconds: 100));
-  // }
+  // Wait for initial sync to complete
+  logger.info("Waiting for initial sync");
+  syncComplete = false;
+  atClientManager.syncService.sync(onDone: onSyncDone);
+  while (!syncComplete) {
+    await Future.delayed(Duration(milliseconds: 100));
+  }
 
-  // atClientManager.syncService.sync(onDone: () {
-  //   _logger.info('sync complete');
-  // });
+  atClientManager.syncService.sync(onDone: () {
+    logger.info('sync complete');
+  });
 
 // Set up MQTT
   mqttSession = MqttServerClient(mqttIP, deviceName, maxConnectionAttempts: 10);
