@@ -152,10 +152,10 @@ Future<void> gpsMqtt(List<String> args) async {
   stdout.write("Syncing your data.");
   syncComplete = false;
   atClientManager.syncService.sync(onDone: onSyncDone);
-  // while (!syncComplete) {
-  //   await Future.delayed(Duration(milliseconds: 500));
-  //   stderr.write(".");
-  // }
+  while (!syncComplete) {
+    await Future.delayed(Duration(milliseconds: 500));
+    stderr.write(".");
+  }
 
 // Set up MQTT
   mqttSession = MqttServerClient(mqttIP, deviceName, maxConnectionAttempts: 10);

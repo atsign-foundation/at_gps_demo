@@ -65,12 +65,14 @@ packages:
     source: hosted
     version: "3.0.24"
   at_lookup:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: at_lookup
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.29"
+      path: at_lookup
+      ref: tlsdump
+      resolved-ref: be07f3f82c2ee9d5846cdf3cbca0c60cb8e3d72c
+      url: "https://github.com/atsign-foundation/at_libraries.git"
+    source: git
+    version: "3.0.28"
   at_onboarding_cli:
     dependency: "direct main"
     description:

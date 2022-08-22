@@ -94,7 +94,14 @@ void main(List<String> args) async {
     ..commitLogPath =
         '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..rootDomain = rootDomain
-    ..atKeysFilePath = atsignFile;
+    ..atKeysFilePath = atsignFile
+    ..tlsKeysSavePath = '$homeDirectory/.tls/tlskeys'
+    ..pathToCerts = '$homeDirectory/.tls/rootcacert.pem'
+    ..decryptPackets = true;
+
+    stderr.write('Writting TLS keys to $homeDirectory/.tls/tlskeys\r');
+
+
   AtOnboardingService onboardingService =
       AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
   await onboardingService.authenticate();
