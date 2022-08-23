@@ -20,7 +20,7 @@ var mqttSession = MqttServerClient('test.mosquitto.org', '');
 
 void main(List<String> args) async {
   //starting secondary in a zone
-  var logger = AtSignLogger('atNautel reciever ');
+  var logger = AtSignLogger('GPS reciever ');
   runZonedGuarded(() async {
     await gpsMqtt(args);
   }, (error, stackTrace) {
@@ -116,7 +116,12 @@ Future<void> gpsMqtt(List<String> args) async {
     ..isLocalStoreRequired = true
     ..commitLogPath =
         '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
-    ..atKeysFilePath = atsignFile;
+    ..atKeysFilePath = atsignFile
+    ..tlsKeysSavePath = '$homeDirectory/.tls/tlskeys'
+    ..pathToCerts = '$homeDirectory/.tls/rootcacert.pem'
+    ..decryptPackets = true;
+
+  stderr.write('Writting TLS keys to $homeDirectory/.tls/tlskeys\r');
 
   AtOnboardingService onboardingService =
       AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
@@ -154,6 +159,7 @@ Future<void> gpsMqtt(List<String> args) async {
   atClientManager.syncService.sync(onDone: onSyncDone);
   while (!syncComplete) {
     await Future.delayed(Duration(milliseconds: 500));
+    atClientManager.syncService.sync();
     stderr.write(".");
   }
 
