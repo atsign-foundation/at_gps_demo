@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
@@ -20,7 +21,7 @@ var mqttSession = MqttServerClient('test.mosquitto.org', '');
 
 void main(List<String> args) async {
   //starting secondary in a zone
-  var logger = AtSignLogger('atNautel reciever ');
+  var logger = AtSignLogger('GPS reciever ');
   runZonedGuarded(() async {
     await gpsMqtt(args);
   }, (error, stackTrace) {
@@ -37,7 +38,7 @@ Future<void> gpsMqtt(List<String> args) async {
   String deviceName;
 
   InternetAddress target;
-  final AtSignLogger logger = AtSignLogger(' nautel ');
+  final AtSignLogger logger = AtSignLogger(' GPS rec ');
   logger.hierarchicalLoggingEnabled = true;
   logger.logger.level = Level.WARNING;
 
@@ -225,16 +226,22 @@ Future<void> gpsMqtt(List<String> args) async {
     String? json = notification.key;
     json = json.replaceFirst('$receivingAtsign:', '');
     print(json);
-
+    int timeNow = DateTime.now().millisecondsSinceEpoch;
+    var decodeJson = jsonDecode(json.toString());
+    int timeSent = int.parse(decodeJson['Time']);
+    int timeDelay = timeNow - timeSent;
+    print('Time Delay: $timeDelay');
+    decodeJson['Time'] = '${timeDelay.toString()} ms';
+    String sendJson = jsonEncode(decodeJson);
     if (notification.from == fromAtsign) {
       logger.info('Text update recieved from $sendingAtsign');
-      await mqttSession.connect();
 
+      await mqttSession.connect();
       if (mqttSession.connectionStatus!.state ==
           MqttConnectionState.connected) {
         logger.info('Mosquitto client connected sending message');
         mqttSession.publishMessage(
-            mqttTopic, MqttQos.atMostOnce, builder.addString(json).payload!,
+            mqttTopic, MqttQos.atMostOnce, builder.addString(sendJson).payload!,
             retain: false);
         builder.clear();
       } else {

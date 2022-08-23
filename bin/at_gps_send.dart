@@ -15,7 +15,7 @@ import 'package:at_gps_demo/check_file_exists.dart';
 void main(List<String> args) async {
   int port = 2947;
   List<int> dataBuffer = [];
-  final AtSignLogger logger = AtSignLogger(' gps send ');
+  final AtSignLogger logger = AtSignLogger(' GPS send ');
   logger.hierarchicalLoggingEnabled = true;
   logger.logger.level = Level.SHOUT;
 
@@ -164,11 +164,14 @@ List<int> bufferMe(
         query = query.trimRight();
         query = query.trimLeft();
         var json = jsonDecode(query.toString());
+        // temp line for demo's
+        json['speed'] = json['speed'] * 10;
         Map send = {};
         send['device'] = deviceName;
         send['latitude'] = (json['lat'].toString());
         send['longitude'] = (json['lon'].toString());
         send['Speed'] = (json['speed'].toString());
+        send['Time'] = DateTime.now().millisecondsSinceEpoch.toString();
 
         var sender = jsonEncode(send);
         print(sender);
@@ -194,7 +197,7 @@ void sendGps(
     String input) async {
   if (!(input == "")) {
     try {
-      await notificationService.notify(
+     await notificationService.notify(
           NotificationParams.forText(input, toAtsign, shouldEncrypt: true),
           onSuccess: (notification) {
         logger.info('SUCCESS:$notification');
