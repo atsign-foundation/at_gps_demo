@@ -174,7 +174,7 @@ List<int> bufferMe(
         send['Time'] = DateTime.now().millisecondsSinceEpoch.toString();
 
         var sender = jsonEncode(send);
-        print(sender);
+        logger.info(sender);
         sendGps(fromAtsign, toAtsign, nameSpace, deviceName,
             notificationService, logger, sender);
       } catch (e) {

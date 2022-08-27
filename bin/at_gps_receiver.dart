@@ -153,10 +153,10 @@ Future<void> gpsMqtt(List<String> args) async {
   stdout.write("Syncing your data.");
   syncComplete = false;
   atClientManager.syncService.sync(onDone: onSyncDone);
-  // while (!syncComplete) {
-  //   await Future.delayed(Duration(milliseconds: 500));
-  //   stderr.write(".");
-  // }
+  while (!syncComplete) {
+    await Future.delayed(Duration(milliseconds: 500));
+    stderr.write(".");
+  }
 
 // Set up MQTT
   mqttSession = MqttServerClient(mqttIP, deviceName, maxConnectionAttempts: 10);
@@ -225,12 +225,12 @@ Future<void> gpsMqtt(List<String> args) async {
     String? sendingAtsign = notification.from;
     String? json = notification.key;
     json = json.replaceFirst('$receivingAtsign:', '');
-    print(json);
+    logger.info(json);
     int timeNow = DateTime.now().millisecondsSinceEpoch;
     var decodeJson = jsonDecode(json.toString());
     int timeSent = int.parse(decodeJson['Time']);
     int timeDelay = timeNow - timeSent;
-    print('Time Delay: $timeDelay');
+    logger.info('Time Delay: $timeDelay');
     decodeJson['Time'] = '${timeDelay.toString()} ms';
     String sendJson = jsonEncode(decodeJson);
     if (notification.from == fromAtsign) {
