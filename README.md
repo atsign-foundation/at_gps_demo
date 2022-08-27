@@ -1,2 +1,1 @@
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
+A sample demo to send end to end encrypted GPS using gpsd and thingsboard as the end points.. Documentation to follow soon - @cconstab
