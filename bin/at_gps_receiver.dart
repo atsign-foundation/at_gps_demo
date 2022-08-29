@@ -202,6 +202,10 @@ Future<void> gpsMqtt(List<String> args) async {
     mqttSession.disconnect();
     exit(-1);
   }
+
+  //We only want recent events
+  // Thsi will be done in the atPlatform soon!
+  //
   int lastTime = 0;
 // Subscribe to the Text messages
 // Note this is not an atKey but a text message being sent
