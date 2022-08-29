@@ -45,21 +45,13 @@ Future<void> gpsMqtt(List<String> args) async {
   var parser = ArgParser();
 // Args
   parser.addOption('key-file',
-      abbr: 'k',
-      mandatory: false,
-      help: 'transmitters atSign\'s atKeys file if not in ~/.atsign/keys/');
-  parser.addOption('receiver-atsign',
-      abbr: 'r', mandatory: true, help: '@sign that recieves notifications');
-  parser.addOption('data-from-atsign',
-      abbr: 'f', mandatory: true, help: 'Source atSign');
-  parser.addOption('device-name',
-      abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
-  parser.addOption('mqtt-host',
-      abbr: 'm', mandatory: true, help: 'MQQT server hostname');
-  parser.addOption('mqtt-username',
-      abbr: 'u', mandatory: true, help: 'MQQT server username');
-  parser.addOption('mqtt-topic',
-      abbr: 't', mandatory: true, help: 'MQTT subjectname');
+      abbr: 'k', mandatory: false, help: 'transmitters atSign\'s atKeys file if not in ~/.atsign/keys/');
+  parser.addOption('receiver-atsign', abbr: 'r', mandatory: true, help: '@sign that recieves notifications');
+  parser.addOption('data-from-atsign', abbr: 'f', mandatory: true, help: 'Source atSign');
+  parser.addOption('device-name', abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
+  parser.addOption('mqtt-host', abbr: 'm', mandatory: true, help: 'MQQT server hostname');
+  parser.addOption('mqtt-username', abbr: 'u', mandatory: true, help: 'MQQT server username');
+  parser.addOption('mqtt-topic', abbr: 't', mandatory: true, help: 'MQTT subjectname');
   parser.addFlag('verbose', abbr: 'v', help: 'More logging');
 
   // Check the arguments
@@ -110,17 +102,14 @@ Future<void> gpsMqtt(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath =
-        '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage'
+    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath =
-        '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
+    ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
     ..atKeysFilePath = atsignFile;
 
-  AtOnboardingService onboardingService =
-      AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
+  AtOnboardingService onboardingService = AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
 
   await onboardingService.authenticate();
 
@@ -209,19 +198,15 @@ Future<void> gpsMqtt(List<String> args) async {
     logger.info(' Mosquitto client connected');
   } else {
     /// Use status here rather than state if you also want the broker return code.
-    logger.severe(
-        ' Mosquitto client connection failed - disconnecting, status is ${mqttSession.connectionStatus}');
+    logger.severe(' Mosquitto client connection failed - disconnecting, status is ${mqttSession.connectionStatus}');
     mqttSession.disconnect();
     exit(-1);
   }
-
+  int lastTime = 0;
 // Subscribe to the Text messages
 // Note this is not an atKey but a text message being sent
-  notificationService
-      .subscribe(
-          regex: '$receivingAtsign:{"device":"$deviceName"',
-          shouldDecrypt: true)
-      .listen(((notification) async {
+  notificationService.subscribe(regex: '$receivingAtsign:{"device":"$deviceName"', shouldDecrypt: true).listen(
+      ((notification) async {
     String? sendingAtsign = notification.from;
     String? json = notification.key;
     json = json.replaceFirst('$receivingAtsign:', '');
@@ -230,25 +215,26 @@ Future<void> gpsMqtt(List<String> args) async {
     var decodeJson = jsonDecode(json.toString());
     int timeSent = int.parse(decodeJson['Time']);
     int timeDelay = timeNow - timeSent;
-    logger.info('Time Delay: $timeDelay');
-    decodeJson['Time'] = '${timeDelay.toString()} ms';
-    String sendJson = jsonEncode(decodeJson);
-    if (notification.from == fromAtsign) {
-      logger.info('Text update recieved from $sendingAtsign');
+    if (timeSent > lastTime) {
+      lastTime = timeSent;
+      logger.info('Time Delay: $timeDelay');
+      decodeJson['Time'] = '${timeDelay.toString()} ms';
+      String sendJson = jsonEncode(decodeJson);
+      if (notification.from == fromAtsign) {
+        logger.info('Text update recieved from $sendingAtsign');
 
-      await mqttSession.connect();
-      if (mqttSession.connectionStatus!.state ==
-          MqttConnectionState.connected) {
-        logger.info('Mosquitto client connected sending message');
-        mqttSession.publishMessage(
-            mqttTopic, MqttQos.atMostOnce, builder.addString(sendJson).payload!,
-            retain: false);
-        builder.clear();
-      } else {
         await mqttSession.connect();
+        if (mqttSession.connectionStatus!.state == MqttConnectionState.connected) {
+          logger.info('Mosquitto client connected sending message');
+          mqttSession.publishMessage(mqttTopic, MqttQos.atMostOnce, builder.addString(sendJson).payload!,
+              retain: false);
+          builder.clear();
+        } else {
+          await mqttSession.connect();
+        }
       }
     }
   }),
-          onError: (e) => logger.severe('Notification Failed:' + e.toString()),
-          onDone: () => logger.info('Notification listener stopped'));
+      onError: (e) => logger.severe('Notification Failed:' + e.toString()),
+      onDone: () => logger.info('Notification listener stopped'));
 }
