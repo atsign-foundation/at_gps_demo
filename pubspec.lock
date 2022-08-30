@@ -51,12 +51,14 @@ packages:
     source: hosted
     version: "1.0.0"
   at_client:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
-      name: at_client
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.35"
+      path: at_client
+      ref: enhance_notify_text
+      resolved-ref: "2fb387bb642d38f3f3d9b65b9d42c7e2731a1fe1"
+      url: "https://github.com/atsign-foundation/at_client_sdk.git"
+    source: git
+    version: "3.0.36"
   at_commons:
     dependency: transitive
     description:

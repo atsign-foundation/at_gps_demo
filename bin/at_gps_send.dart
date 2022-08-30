@@ -22,19 +22,11 @@ void main(List<String> args) async {
   var parser = ArgParser();
 // Args
   parser.addOption('key-file',
-      abbr: 'k',
-      mandatory: false,
-      help: 'This device\'s atSign\'s atKeys file if not in ~/.atsign/keys/');
+      abbr: 'k', mandatory: false, help: 'This device\'s atSign\'s atKeys file if not in ~/.atsign/keys/');
   parser.addOption('atsign', abbr: 'a', mandatory: true, help: 'Your atSign');
-  parser.addOption('toatsign',
-      abbr: 't', mandatory: true, help: 'Send data to this atSign');
-  parser.addOption('port',
-      abbr: 'p',
-      mandatory: false,
-      help: 'Alternative port for GPS data',
-      defaultsTo: '2947');
-  parser.addOption('device-name',
-      abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
+  parser.addOption('toatsign', abbr: 't', mandatory: true, help: 'Send data to this atSign');
+  parser.addOption('port', abbr: 'p', mandatory: false, help: 'Alternative port for GPS data', defaultsTo: '2947');
+  parser.addOption('device-name', abbr: 'n', mandatory: true, help: 'Device name, used as AtKey:key');
 
   parser.addFlag('verbose', abbr: 'v', help: 'More logging');
 
@@ -86,22 +78,19 @@ void main(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath =
-        '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
+    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath =
-        '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
+    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..rootDomain = rootDomain
     ..atKeysFilePath = atsignFile;
-  AtOnboardingService onboardingService =
-      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
+  AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
   await onboardingService.authenticate();
   AtClient? atClient = await onboardingService.getAtClient();
   AtClientManager atClientManager = AtClientManager.getInstance();
   NotificationService notificationService = atClientManager.notificationService;
-
+  
   bool syncComplete = false;
   void onSyncDone(syncResult) {
     logger.info("syncResult.syncStatus: ${syncResult.syncStatus}");
@@ -124,8 +113,8 @@ void main(List<String> args) async {
 
   try {
     socket.listen((List<int> event) {
-      dataBuffer = bufferMe(event, dataBuffer, fromAtsign, toAtsign, nameSpace,
-          deviceName, notificationService, logger);
+      dataBuffer =
+          bufferMe(event, dataBuffer, fromAtsign, toAtsign, nameSpace, deviceName, notificationService, logger);
     });
 
     var send = '?WATCH={"enable":true,"json":true};';
@@ -137,15 +126,8 @@ void main(List<String> args) async {
   }
 }
 
-List<int> bufferMe(
-    data,
-    List<int> dataBuffer,
-    String fromAtsign,
-    String toAtsign,
-    String nameSpace,
-    String deviceName,
-    NotificationService notificationService,
-    AtSignLogger logger) {
+List<int> bufferMe(data, List<int> dataBuffer, String fromAtsign, String toAtsign, String nameSpace, String deviceName,
+    NotificationService notificationService, AtSignLogger logger) {
   dataBuffer.addAll(data);
   String query = utf8.decode(dataBuffer);
   if (!query.contains('"lat"') || !query.contains('"lon"')) {
@@ -175,8 +157,7 @@ List<int> bufferMe(
 
         var sender = jsonEncode(send);
         logger.info(sender);
-        sendGps(fromAtsign, toAtsign, nameSpace, deviceName,
-            notificationService, logger, sender);
+        sendGps(fromAtsign, toAtsign, nameSpace, deviceName, notificationService, logger, sender);
       } catch (e) {
         print(e.toString());
       }
@@ -187,18 +168,11 @@ List<int> bufferMe(
   return (dataBuffer);
 }
 
-void sendGps(
-    String fromAtsign,
-    String toAtsign,
-    String nameSpace,
-    String deviceName,
-    NotificationService notificationService,
-    AtSignLogger logger,
-    String input) async {
+void sendGps(String fromAtsign, String toAtsign, String nameSpace, String deviceName,
+    NotificationService notificationService, AtSignLogger logger, String input) async {
   if (!(input == "")) {
     try {
-     await notificationService.notify(
-          NotificationParams.forText(input, toAtsign, shouldEncrypt: true),
+      await notificationService.notify(NotificationParams.forText(input, toAtsign, shouldEncrypt: true, notifier: deviceName, strategyEnum: StrategyEnum.latest),checkForFinalDeliveryStatus: false,
           onSuccess: (notification) {
         logger.info('SUCCESS:$notification');
       }, onError: (notification) {
