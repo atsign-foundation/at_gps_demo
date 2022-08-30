@@ -1,0 +1,16 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "at_gps_demo",
+            "program": "bin/at_gps_receiver.dart",
+            "request": "launch",
+            "type": "dart",
+            "args": [ "-r", "@atgps_receiver", "-n", "car1", "-m", "192.168.1.149", "-t", "v1/devices/me/telemetry", "-u", "TJw0tp2F97D0adWlEEQC", "-f", "@atgps01", "-v" ]
+        }
+    ]
+}

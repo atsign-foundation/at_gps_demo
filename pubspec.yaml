@@ -15,7 +15,7 @@ dev_dependencies:
 
 dependencies: 
   args: ^2.3.1
-#  at_client: ^3.0.35
+  # at_client: ^3.0.35
   at_onboarding_cli: ^1.1.1
   at_utils: ^3.0.10
   logging: ^1.0.2
@@ -25,6 +25,6 @@ dependency_overrides:
   at_client:
     git:
       url: https://github.com/atsign-foundation/at_client_sdk.git
-      ref: enhance_notify_text
+      ref: enhance_notify_text_colin
       path: at_client
 

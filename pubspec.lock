@@ -54,8 +54,8 @@ packages:
     dependency: "direct overridden"
     description:
       path: at_client
-      ref: enhance_notify_text
-      resolved-ref: "2fb387bb642d38f3f3d9b65b9d42c7e2731a1fe1"
+      ref: enhance_notify_text_colin
+      resolved-ref: "98bbe85af6c574ddb1abc61507cf8164c5e407a1"
       url: "https://github.com/atsign-foundation/at_client_sdk.git"
     source: git
     version: "3.0.36"
