@@ -95,9 +95,9 @@ Future<void> gpsMqtt(List<String> args) async {
 // Now on to the @platform startup
   AtSignLogger.root_level = 'WARNING';
   if (results['verbose']) {
-    logger.logger.level = Level.FINER;
+    logger.logger.level = Level.INFO;
 
-    AtSignLogger.root_level = 'FINER';
+    AtSignLogger.root_level = 'INFO';
   }
 
   //onboarding preference builder can be used to set onboardingService parameters
