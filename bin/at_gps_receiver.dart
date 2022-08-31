@@ -162,8 +162,7 @@ Future<void> gpsMqtt(List<String> args) async {
 
   mqttSession.pongCallback = pong;
 
-  // await mqttSession.connect(mqttUsername, 'KRYZ');
-  // print(mqttSession.connectionStatus);
+
 
   /// Create a connection message to use or use the default one. The default one sets the
   /// client identifier, any supplied username/password and clean session,

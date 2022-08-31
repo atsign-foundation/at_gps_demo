@@ -140,7 +140,7 @@ List<int> bufferMe(data, List<int> dataBuffer, String fromAtsign, String toAtsig
     LineSplitter ls = LineSplitter();
     List<String> lines = ls.convert(query);
     for (var i = 0; i < lines.length; i++) {
-      // print('Line $i: ${lines[i]}');
+      logger.info('Line $i: ${lines[i]}');
       query = lines[i];
       try {
         query = query.trimRight();
