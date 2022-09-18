@@ -107,6 +107,7 @@ Future<void> gpsMqtt(List<String> args) async {
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
+    ..fetchOfflineNotifications = false
     ..atKeysFilePath = atsignFile;
 
   AtOnboardingService onboardingService = AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);

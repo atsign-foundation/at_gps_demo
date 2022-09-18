@@ -172,7 +172,7 @@ void sendGps(String fromAtsign, String toAtsign, String nameSpace, String device
     NotificationService notificationService, AtSignLogger logger, String input) async {
   if (!(input == "")) {
     try {
-      await notificationService.notify(NotificationParams.forText(input, toAtsign, shouldEncrypt: true, notifier: deviceName, strategyEnum: StrategyEnum.latest),checkForFinalDeliveryStatus: false,
+      await notificationService.notify(NotificationParams.forText(input, toAtsign, shouldEncrypt: true,),checkForFinalDeliveryStatus: false,
           onSuccess: (notification) {
         logger.info('SUCCESS:$notification');
       }, onError: (notification) {
