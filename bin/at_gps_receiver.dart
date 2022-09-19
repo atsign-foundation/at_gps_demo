@@ -103,6 +103,9 @@ Future<void> gpsMqtt(List<String> args) async {
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
     ..hiveStoragePath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage'
+    //..syncBatchSize = 1
+    ..syncIntervalMins = 10
+    ..syncRegex = "ai6bh"
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
