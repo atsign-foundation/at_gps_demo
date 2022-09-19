@@ -105,7 +105,7 @@ Future<void> gpsMqtt(List<String> args) async {
     ..hiveStoragePath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage'
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
-    ..isLocalStoreRequired = true
+    ..isLocalStoreRequired = false
     ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
     ..fetchOfflineNotifications = false
     ..monitorHeartbeatInterval = Duration(seconds: 60)
