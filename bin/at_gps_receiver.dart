@@ -108,6 +108,7 @@ Future<void> gpsMqtt(List<String> args) async {
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
     ..fetchOfflineNotifications = false
+    ..monitorHeartbeatInterval = Duration(seconds: 60)
     ..atKeysFilePath = atsignFile;
 
   AtOnboardingService onboardingService = AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
