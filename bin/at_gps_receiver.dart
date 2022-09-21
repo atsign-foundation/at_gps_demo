@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html';
 import 'dart:io';
 import 'dart:async';
 
@@ -167,8 +168,6 @@ Future<void> gpsMqtt(List<String> args) async {
 
   mqttSession.pongCallback = pong;
 
-
-
   /// Create a connection message to use or use the default one. The default one sets the
   /// client identifier, any supplied username/password and clean session,
   /// an example of a specific one below.
@@ -245,4 +244,20 @@ Future<void> gpsMqtt(List<String> args) async {
   }),
       onError: (e) => logger.severe('Notification Failed:' + e.toString()),
       onDone: () => logger.info('Notification listener stopped'));
+
+ // Adding syncProgressListener to callback.
+  var syncProgressListener = MySyncProgressListener();
+  atClientManager.syncService.addProgressListener(syncProgressListener);
+}
+
+/// Class representing the Sync Progress.
+class MySyncProgressListener extends SyncProgressListener {
+  @override
+  void onSyncProgressEvent(SyncProgress syncProgress) {
+    print('Sync Progress Info: atSign: ${syncProgress.atSign} '
+        'completedAt: ${syncProgress.completedAt} '
+        'LocalCommitIdBeforeSync: ${syncProgress.localCommitIdBeforeSync} '
+        'LocalCommitIdAfterSync ${syncProgress.localCommitId}');
+  }
+
 }
