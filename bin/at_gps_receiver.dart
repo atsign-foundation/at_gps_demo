@@ -37,6 +37,7 @@ Future<void> gpsMqtt(List<String> args) async {
   String mqttTopic;
   String mqttUsername;
   String nameSpace = 'ai6bh';
+  String rootDomain = 'root.atsign.org';
   String deviceName;
 
   final AtSignLogger logger = AtSignLogger(' GPS rec ');
@@ -102,20 +103,18 @@ Future<void> gpsMqtt(List<String> args) async {
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
     ..hiveStoragePath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage'
     //..syncBatchSize = 1
-    ..syncIntervalMins = 10
-    ..syncRegex = "ai6bh"
+    ..rootDomain = rootDomain
     ..namespace = nameSpace
     ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
     ..fetchOfflineNotifications = false
-    ..monitorHeartbeatInterval = Duration(seconds: 60)
     ..atKeysFilePath = atsignFile
     ..useAtChops = true;
 
 
  AtOnboardingService onboardingService =
-      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
+      AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
 
   bool onboarded = false;
   Duration retryDuration = Duration(seconds: 3);
