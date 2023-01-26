@@ -7,6 +7,8 @@ import 'package:args/args.dart';
 import 'package:logging/src/level.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:chalkdart/chalk.dart';
+
 
 // @platform packages
 import 'package:at_client/at_client.dart';
@@ -37,7 +39,6 @@ Future<void> gpsMqtt(List<String> args) async {
   String nameSpace = 'ai6bh';
   String deviceName;
 
-  InternetAddress target;
   final AtSignLogger logger = AtSignLogger(' GPS rec ');
   logger.hierarchicalLoggingEnabled = true;
   logger.logger.level = Level.WARNING;
@@ -72,9 +73,6 @@ Future<void> gpsMqtt(List<String> args) async {
     mqttUsername = results['mqtt-username'];
     mqttTopic = results['mqtt-topic'];
     deviceName = results['device-name'];
-
-    var targetlist = await InternetAddress.lookup(mqttIP);
-    target = targetlist[0];
 
     if (results['key-file'] != null) {
       atsignFile = results['key-file'];
@@ -112,45 +110,33 @@ Future<void> gpsMqtt(List<String> args) async {
     ..commitLogPath = '$homeDirectory/.$nameSpace/$receivingAtsign/$deviceName/storage/commitLog'
     ..fetchOfflineNotifications = false
     ..monitorHeartbeatInterval = Duration(seconds: 60)
-    ..atKeysFilePath = atsignFile;
+    ..atKeysFilePath = atsignFile
+    ..useAtChops = true;
 
-  AtOnboardingService onboardingService = AtOnboardingServiceImpl(receivingAtsign, atOnboardingConfig);
 
-  await onboardingService.authenticate();
+ AtOnboardingService onboardingService =
+      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
 
-  // var atClient = await onboardingService.getAtClient();
-
-  AtClientManager atClientManager = AtClientManager.getInstance();
-
-  NotificationService notificationService = atClientManager.notificationService;
-
-// Keep an eye on connectivity and report failures if we see them
-  ConnectivityListener().subscribe().listen((isConnected) {
-    if (isConnected) {
-      logger.warning('connection available');
-    } else {
-      logger.warning('connection lost');
+  bool onboarded = false;
+  Duration retryDuration = Duration(seconds: 3);
+  while (!onboarded) {
+    try {
+      stderr.write(chalk.brightBlue('\r\x1b[KConnecting ... '));
+      await Future.delayed(Duration(
+          milliseconds:
+              1000)); // Pause just long enough for the retry to be visible
+      onboarded = await onboardingService.authenticate();
+    } catch (exception) {
+      stderr.write(chalk.brightRed(
+          '$exception. Will retry in ${retryDuration.inSeconds} seconds'));
     }
-  });
-
-//Waiting for sync breaks stuff for now
-// As we only use notifications thats just fine
-  bool syncComplete = false;
-  void onSyncDone(syncResult) {
-    logger.info("syncResult.syncStatus: ${syncResult.syncStatus}");
-    logger.info("syncResult.lastSyncedOn ${syncResult.lastSyncedOn}");
-    syncComplete = true;
+    if (!onboarded) {
+      await Future.delayed(retryDuration);
+    }
   }
-
-  // Wait for initial sync to complete
-  logger.info("Waiting for initial sync");
-  stdout.write("Syncing your data.");
-  syncComplete = false;
-  atClientManager.syncService.sync(onDone: onSyncDone);
-  while (!syncComplete) {
-    await Future.delayed(Duration(milliseconds: 500));
-    stderr.write(".");
-  }
+  stdout.writeln(chalk.brightGreen('Connected'));
+  AtClientManager atClientManager = AtClientManager.getInstance();
+  NotificationService notificationService = atClientManager.atClient.notificationService;
 
 // Set up MQTT
   mqttSession = MqttServerClient(mqttIP, deviceName, maxConnectionAttempts: 10);
@@ -229,34 +215,21 @@ Future<void> gpsMqtt(List<String> args) async {
       if (notification.from == fromAtsign) {
         logger.info('Text update recieved from $sendingAtsign');
 
-        await mqttSession.connect();
-        if (mqttSession.connectionStatus!.state == MqttConnectionState.connected) {
-          logger.info('Mosquitto client connected sending message');
-          mqttSession.publishMessage(mqttTopic, MqttQos.atMostOnce, builder.addString(sendJson).payload!,
-              retain: false);
-          builder.clear();
-        } else {
-          await mqttSession.connect();
-        }
+      try {
+        logger.info('Mosquitto client sending message: $sendJson');
+        mqttSession.publishMessage(
+            mqttTopic, MqttQos.atMostOnce, builder.addString(json).payload!,
+            retain: false);
+        builder.clear();
+      } catch (e) {
+        logger.info('Error sending mqtt message: $e');
+      }
       }
     }
   }),
-      onError: (e) => logger.severe('Notification Failed:' + e.toString()),
+      onError: (e) => logger.severe('Notification Failed:$e'),
       onDone: () => logger.info('Notification listener stopped'));
 
- // Adding syncProgressListener to callback.
-  var syncProgressListener = MySyncProgressListener();
-  atClientManager.syncService.addProgressListener(syncProgressListener);
 }
 
-/// Class representing the Sync Progress.
-class MySyncProgressListener extends SyncProgressListener {
-  @override
-  void onSyncProgressEvent(SyncProgress syncProgress) {
-    print('Sync Progress Info: atSign: ${syncProgress.atSign} '
-        'completedAt: ${syncProgress.completedAt} '
-        'LocalCommitIdBeforeSync: ${syncProgress.localCommitIdBeforeSync} '
-        'LocalCommitIdAfterSync ${syncProgress.localCommitId}');
-  }
 
-}

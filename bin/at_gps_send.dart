@@ -4,6 +4,8 @@ import 'dart:io';
 // external packages
 import 'package:args/args.dart';
 import 'package:logging/src/level.dart';
+import 'package:chalkdart/chalk.dart';
+
 // @platform packages
 import 'package:at_client/at_client.dart';
 import 'package:at_utils/at_logger.dart';
@@ -84,29 +86,33 @@ void main(List<String> args) async {
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/$deviceName/storage/commitLog'
     ..rootDomain = rootDomain
-    ..atKeysFilePath = atsignFile;
-  AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
-  await onboardingService.authenticate();
-  //AtClient? atClient = await onboardingService.getAtClient();
-  AtClientManager atClientManager = AtClientManager.getInstance();
-  NotificationService notificationService = atClientManager.notificationService;
-  
-  bool syncComplete = false;
-  void onSyncDone(syncResult) {
-    logger.info("syncResult.syncStatus: ${syncResult.syncStatus}");
-    logger.info("syncResult.lastSyncedOn ${syncResult.lastSyncedOn}");
-    syncComplete = true;
-  }
+    ..atKeysFilePath = atsignFile
+    ..useAtChops = true;
+ AtOnboardingService onboardingService =
+      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
 
-  // Wait for initial sync to complete
-  logger.info("Waiting for initial sync");
-  stdout.write("Syncing your data.");
-  syncComplete = false;
-  atClientManager.syncService.sync(onDone: onSyncDone);
-  while (!syncComplete) {
-    await Future.delayed(Duration(milliseconds: 500));
-    stderr.write(".");
+  bool onboarded = false;
+  Duration retryDuration = Duration(seconds: 3);
+  while (!onboarded) {
+    try {
+      stderr.write(chalk.brightBlue('\r\x1b[KConnecting ... '));
+      await Future.delayed(Duration(
+          milliseconds:
+              1000)); // Pause just long enough for the retry to be visible
+      onboarded = await onboardingService.authenticate();
+    } catch (exception) {
+      stderr.write(chalk.brightRed(
+          '$exception. Will retry in ${retryDuration.inSeconds} seconds'));
+    }
+    if (!onboarded) {
+      await Future.delayed(retryDuration);
+    }
   }
+  stdout.writeln(chalk.brightGreen('Connected'));
+  AtClientManager atClientManager = AtClientManager.getInstance();
+  NotificationService notificationService = atClientManager.atClient.notificationService;
+
+
 
   var socket = await Socket.connect('localhost', port);
   logger.info('Client connected');
@@ -172,8 +178,13 @@ void sendGps(String fromAtsign, String toAtsign, String nameSpace, String device
     NotificationService notificationService, AtSignLogger logger, String input) async {
   if (!(input == "")) {
     try {
-      await notificationService.notify(NotificationParams.forText(input, toAtsign, shouldEncrypt: true,),checkForFinalDeliveryStatus: false,
-          onSuccess: (notification) {
+      await notificationService.notify(
+          NotificationParams.forText(
+            input,
+            toAtsign,
+            shouldEncrypt: true,
+          ),
+          checkForFinalDeliveryStatus: false, onSuccess: (notification) {
         logger.info('SUCCESS:$notification');
       }, onError: (notification) {
         logger.info('ERROR:$notification');
