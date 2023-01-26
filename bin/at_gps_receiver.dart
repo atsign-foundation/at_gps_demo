@@ -217,7 +217,7 @@ Future<void> gpsMqtt(List<String> args) async {
       try {
         logger.info('Mosquitto client sending message: $sendJson');
         mqttSession.publishMessage(
-            mqttTopic, MqttQos.atMostOnce, builder.addString(json).payload!,
+            mqttTopic, MqttQos.atMostOnce, builder.addString(sendJson).payload!,
             retain: false);
         builder.clear();
       } catch (e) {
