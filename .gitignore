@@ -5,3 +5,7 @@ pubspeck.lock
 
 # Conventional directory for build output.
 build/
+
+# Secret Map key
+api_key.dart
+

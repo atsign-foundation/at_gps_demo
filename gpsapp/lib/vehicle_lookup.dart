@@ -2,21 +2,14 @@ import 'package:gpsapp/models/vehiclemodel.dart';
 
 import 'dart:convert';
 
-void lookupTransmitter(Vehicle transmitter, String result) async {
-  var localtransmitter = Vehicle(stationName: 'stationName', frequency: 'frequency', ip: 'ip');
+void lookupVehicle(Vehicle vehicle, String result) async {
+  var localVehicle = Vehicle(vehicleName: 'stationName', longitude: '0', latitude: '0');
 
-    localtransmitter = Vehicle.fromJson(json.decode(result));
-    //print('RadioJSON' + transmitter.toString());
-    transmitter.stationName = localtransmitter.stationName;
-    transmitter.frequency = localtransmitter.frequency;
-    transmitter.ip = localtransmitter.ip;
-    transmitter.fanspeed = localtransmitter.fanspeed;
-    transmitter.heatsinktemp = localtransmitter.heatsinktemp;
-    transmitter.peakmodulation = localtransmitter.peakmodulation;
-    transmitter.poweroutput = localtransmitter.poweroutput;
-    transmitter.powerreflected = localtransmitter.powerreflected;
-    transmitter.date = localtransmitter.date;
-    transmitter.swr = localtransmitter.swr;
-    //print(transmitter.fanspeed);
-    //return transmitter;
+  localVehicle = Vehicle.fromJson(json.decode(result));
+  vehicle.vehicleName = localVehicle.vehicleName;
+  vehicle.longitude = localVehicle.longitude;
+  vehicle.latitude = localVehicle.latitude;
+  vehicle.speed = localVehicle.speed;
+  vehicle.time = localVehicle.time;
+
 }
