@@ -26,7 +26,6 @@ import 'package:gpsapp/screens/onboarding_screen.dart';
 import '../vehicle_lookup.dart';
 import '../api_key.dart';
 
-
 // * Once the onboarding process is completed you will be taken to this screen
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -63,44 +62,20 @@ class MyHomePage extends StatefulWidget {
 class MyHomePageState extends State<MyHomePage> {
   Timer? timer;
   final MapController _controller = MapController();
-    double lat1 = 42;
-  double long1 = -83;
-
-  double lat2 = 42;
-  double long2 = -83;
-
-  double lat3 = 42;
-  double long3 = -83;
-
-  double lat4 = 42;
-  double long4 = -83;
-
-  double lat5 = 42;
-  double long5 = -83;
-
-  double lat6 = 42;
-  double long6 = -83;
-
-  String car = '';
-  String car1 = '';
-  String car2 = '';
-  String car3 = '';
-  String car4 = '';
-  String car5 = '';
-  String car6 = '';
+  List<Marker> markers = [];
 
   @override
   void initState() {
     super.initState();
     String nameSpace = 'atgps_receiver';
+    Set<Vehicle> vehicles = {};
 
-      AtClientManager atClientManager = AtClientManager.getInstance();
-      String? atSign = atClientManager.atClient.getCurrentAtSign();
-      NotificationService notificationService = atClientManager.atClient.notificationService;
+    AtClientManager atClientManager = AtClientManager.getInstance();
+    String? atSign = atClientManager.atClient.getCurrentAtSign();
+    NotificationService notificationService = atClientManager.atClient.notificationService;
 
-notificationService
-        .subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true)
-        .listen(((notification) async {
+    notificationService.subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true).listen(
+        ((notification) async {
       String? sendingAtsign = notification.from;
       String? json = notification.key;
       json = json.replaceFirst('@atgps_receiver:', '');
@@ -113,62 +88,75 @@ notificationService
       //   lastTime = timeSent;
       print('Time Delay: $timeDelay');
       decodeJson['Time'] = '${timeDelay.toString()} ms';
-      String sendJson = jsonEncode(decodeJson);
-      car = decodeJson['device'];
-      print('car:$car');
-      if (car == 'car1') {
-        car1 = car;
-        long1 = double.parse(decodeJson['longitude']);
-        lat1 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      } 
-      if (car == 'car2'){
-        car2 = car;
-        long2 = double.parse(decodeJson['longitude']);
-        lat2 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      }
-      if (car == 'car3'){
-        car3 = car;
-        long3 = double.parse(decodeJson['longitude']);
-        lat3 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      }
-      if (car == 'car4'){
-        car4 = car;
-        long4 = double.parse(decodeJson['longitude']);
-        lat4 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      }
-      if (car == 'car5'){
-        car5 = car;
-        long5 = double.parse(decodeJson['longitude']);
-        lat5 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      }
-      if (car == 'car6'){
-        car6 = car;
-        long6 = double.parse(decodeJson['longitude']);
-        lat6 = double.parse(decodeJson['latitude']);
-        setState(() {});
-      }
-    }),
-            onError: (e) => print('Notification Failed:' + e.toString()),
-            onDone: () => print('Notification listener stopped'));
-    }
-  
 
+      Vehicle vehicleData = Vehicle(vehicleName: decodeJson['device']);
+      vehicleData.latitude = double.parse(decodeJson['latitude']);
+      vehicleData.longitude = double.parse(decodeJson['longitude']);
+      markers.clear();
+      vehicles.add(vehicleData);
+      print(vehicles.length);
+      for (var vehicle in vehicles) {
+        if (vehicleData == vehicle) {
+          Marker marker = Marker(
+              point: LatLng(vehicleData.latitude, vehicleData.longitude),
+              width: 38,
+              height: 38,
+              builder: (context) => Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    children: [
+                      // ignore: prefer_const_constructors
+                      Icon(
+                        Icons.directions_car_filled,
+                        color: Colors.green,
+                        size: 40,
+                      ),
+                      Text(
+                        " ${vehicleData.vehicleName}",
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+                      ),
+                    ],
+                  ));
+          markers.add(marker);
+        } else {
+          Marker marker = Marker(
+              point: LatLng(vehicle.latitude, vehicle.longitude),
+              width: 38,
+              height: 38,
+              builder: (context) => Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    children: [
+                      // ignore: prefer_const_constructors
+                      Icon(
+                        Icons.directions_car_filled,
+                        color: Colors.red,
+                        size: 40,
+                      ),
+                      Text(
+                        " ${vehicle.vehicleName}",
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+                      ),
+                    ],
+                  ));
+          markers.add(marker);
+        }
+      }
+      print('Markers>>'+markers.length.toString());
+      setState(() {});
+    }),
+        onError: (e) => print('Notification Failed:' + e.toString()),
+        onDone: () => print('Notification listener stopped'));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: NewGradientAppBar(
-          gradient: const LinearGradient(colors: [
-            Color.fromARGB(255, 78, 173, 80),
-            Color.fromARGB(255, 108, 169, 197)
-          ]),
+          gradient:
+              const LinearGradient(colors: [Color.fromARGB(255, 78, 173, 80), Color.fromARGB(255, 108, 169, 197)]),
           title: const AutoSizeText(
-         'atGPS',
+            'atGPS',
             minFontSize: 3,
           ),
           actions: [
@@ -226,7 +214,7 @@ notificationService
               child: FlutterMap(
             mapController: _controller,
             options: MapOptions(
-                center: LatLng(lat1, long1),
+                center: LatLng(0, 0),
                 zoom: 10,
                 maxZoom: 22,
                 interactiveFlags: InteractiveFlag.drag |
@@ -245,128 +233,7 @@ notificationService
                     // Name must match name under "sources" in theme
                     {'openmaptiles': _cachingTileProvider(_urlTemplate())}),
               ),
-              MarkerLayer(markers: [
-                Marker(
-                    point: LatLng(lat1, long1),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.green,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car1",
-                              textAlign: TextAlign.right,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-                Marker(
-                    point: LatLng(lat2, long2),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.green,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car2",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-                Marker(
-                    point: LatLng(lat3, long3),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.green,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car3",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-                Marker(
-                    point: LatLng(lat4, long4),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.red,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car4",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-                Marker(
-                    point: LatLng(lat5, long5),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.red,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car5",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-                Marker(
-                    point: LatLng(lat6, long6),
-                    width: 38,
-                    height: 38,
-                    builder: (context) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.directions_car_filled,
-                              color: Colors.red,
-                              size: 40,
-                            ),
-                            Text(
-                              " $car6",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                            ),
-                          ],
-                        )),
-              ]),
+              MarkerLayer(markers: markers),
             ],
           )),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [_statusText()])
