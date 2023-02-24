@@ -2,28 +2,27 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:io';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:intl/intl.dart';
-// import 'package:web_socket_channel/io.dart';
-// import 'package:web_socket_channel/status.dart' as status;
+
+
 
 import 'package:at_client_mobile/at_client_mobile.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Maps imports
 import 'package:flutter_map/flutter_map.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
-import 'package:vector_tile_renderer/vector_tile_renderer.dart' as Vector;
+// ignore: depend_on_referenced_packages
+import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vector;
 import 'package:latlong2/latlong.dart';
 
 import 'package:new_gradient_app_bar/new_gradient_app_bar.dart';
 
 import 'package:gpsapp/models/vehiclemodel.dart';
 import 'package:gpsapp/screens/onboarding_screen.dart';
-
-import '../vehicle_lookup.dart';
+// This file is needed and not included in the 
+// repo as it contains an API key for maptiler.com
+// see below for alternative tiler services
 import '../api_key.dart';
 
 // * Once the onboarding process is completed you will be taken to this screen
@@ -36,9 +35,9 @@ class HomeScreen extends StatelessWidget {
     // * Getting the AtClientManager instance to use below
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'atGPS',
+      title: 'atGPS ',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.lightGreen,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const MyHomePage(title: 'atGPS'),
@@ -63,30 +62,28 @@ class MyHomePageState extends State<MyHomePage> {
   Timer? timer;
   final MapController _controller = MapController();
   List<Marker> markers = [];
+  AtClientManager atClientManager = AtClientManager.getInstance();
+  String atSign = "";
 
   @override
   void initState() {
     super.initState();
-    String nameSpace = 'atgps_receiver';
+    String? currentatSign = atClientManager.atClient.getCurrentAtSign();
+    atSign = currentatSign!;
     Set<Vehicle> vehicles = {};
 
-    AtClientManager atClientManager = AtClientManager.getInstance();
-    String? atSign = atClientManager.atClient.getCurrentAtSign();
     NotificationService notificationService = atClientManager.atClient.notificationService;
 
-    notificationService.subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true).listen(
-        ((notification) async {
-      String? sendingAtsign = notification.from;
+    notificationService
+        .subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true)
+        .listen(((notification) async {
       String? json = notification.key;
       json = json.replaceFirst('@atgps_receiver:', '');
-      print(json);
       int timeNow = DateTime.now().millisecondsSinceEpoch;
       var decodeJson = jsonDecode(json.toString());
+      // Time only works if all clocks are syncronized
       int timeSent = int.parse(decodeJson['Time']);
       int timeDelay = timeNow - timeSent;
-      // if (timeSent > lastTime) {
-      //   lastTime = timeSent;
-      print('Time Delay: $timeDelay');
       decodeJson['Time'] = '${timeDelay.toString()} ms';
 
       Vehicle vehicleData = Vehicle(vehicleName: decodeJson['device']);
@@ -94,59 +91,37 @@ class MyHomePageState extends State<MyHomePage> {
       vehicleData.longitude = double.parse(decodeJson['longitude']);
       markers.clear();
       vehicles.add(vehicleData);
-      print(vehicles.length);
       for (var vehicle in vehicles) {
         if (vehicleData == vehicle) {
-          Marker marker = Marker(
-              point: LatLng(vehicleData.latitude, vehicleData.longitude),
-              width: 38,
-              height: 38,
-              builder: (context) => Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.end,
-                    children: [
-                      // ignore: prefer_const_constructors
-                      Icon(
-                        Icons.directions_car_filled,
-                        color: Colors.green,
-                        size: 40,
-                      ),
-                      Text(
-                        " ${vehicleData.vehicleName}",
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                      ),
-                    ],
-                  ));
-          markers.add(marker);
-        } else {
-          Marker marker = Marker(
-              point: LatLng(vehicle.latitude, vehicle.longitude),
-              width: 38,
-              height: 38,
-              builder: (context) => Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.end,
-                    children: [
-                      // ignore: prefer_const_constructors
-                      Icon(
-                        Icons.directions_car_filled,
-                        color: Colors.red,
-                        size: 40,
-                      ),
-                      Text(
-                        " ${vehicle.vehicleName}",
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
-                      ),
-                    ],
-                  ));
-          markers.add(marker);
+          vehicle.vehicleName = vehicleData.vehicleName;
+          vehicle.latitude = vehicleData.latitude;
+          vehicle.longitude = vehicleData.longitude;
+          vehicle.speed = vehicleData.speed;
         }
+        Marker marker = Marker(
+            point: LatLng(vehicle.latitude, vehicle.longitude),
+            width: 38,
+            height: 38,
+            builder: (context) => Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  children: [
+                    // ignore: prefer_const_constructors
+                    Icon(
+                      Icons.directions_car_filled,
+                      color: Colors.red,
+                      size: 40,
+                    ),
+                    Text(
+                      " ${vehicle.vehicleName}",
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
+                    ),
+                  ],
+                ));
+        markers.add(marker);
       }
-      print('Markers>>'+markers.length.toString());
       setState(() {});
-    }),
-        onError: (e) => print('Notification Failed:' + e.toString()),
-        onDone: () => print('Notification listener stopped'));
+    }));
   }
 
   @override
@@ -155,8 +130,8 @@ class MyHomePageState extends State<MyHomePage> {
         appBar: NewGradientAppBar(
           gradient:
               const LinearGradient(colors: [Color.fromARGB(255, 78, 173, 80), Color.fromARGB(255, 108, 169, 197)]),
-          title: const AutoSizeText(
-            'atGPS',
+          title:  AutoSizeText(
+            'atGPS $atSign',
             minFontSize: 3,
           ),
           actions: [
@@ -214,8 +189,8 @@ class MyHomePageState extends State<MyHomePage> {
               child: FlutterMap(
             mapController: _controller,
             options: MapOptions(
-                center: LatLng(0, 0),
-                zoom: 10,
+                center: LatLng(42.0858, -83.3116),
+                zoom: 15,
                 maxZoom: 22,
                 interactiveFlags: InteractiveFlag.drag |
                     InteractiveFlag.flingAnimation |
@@ -251,17 +226,17 @@ class MyHomePageState extends State<MyHomePage> {
         maxSizeBytes: 1024 * 1024 * 2);
   }
 
-  Vector.Theme _mapTheme() {
+  vector.Theme _mapTheme() {
     // maps are rendered using themes
     // to provide a dark theme do something like this:
     // if (MediaQuery.of(context).platformBrightness == Brightness.dark) return myDarkTheme();
-    return Vector.ProvidedThemes.lightTheme();
+    return vector.ProvidedThemes.lightTheme();
     // return ThemeReader(logger: const Logger.console())
     //     .read(myCustomStyle());
   }
 
   _backgroundTheme() {
-    return _mapTheme().copyWith(types: {Vector.ThemeLayerType.background, Vector.ThemeLayerType.fill});
+    return _mapTheme().copyWith(types: {vector.ThemeLayerType.background, vector.ThemeLayerType.fill});
   }
 
   String _urlTemplate() {
