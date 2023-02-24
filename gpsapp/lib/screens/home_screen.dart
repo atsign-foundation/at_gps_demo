@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'dart:io';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:intl/intl.dart';
@@ -27,10 +29,8 @@ import '../api_key.dart';
 
 // * Once the onboarding process is completed you will be taken to this screen
 class HomeScreen extends StatelessWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key);
   static const String id = '/home';
-
-  final transmitter = Vehicle(vehicleName: 'car1', latitude: '42', longitude: '-83');
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +42,9 @@ class HomeScreen extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'atGPS', vehicle: transmitter),
+      home: const MyHomePage(title: 'atGPS'),
       routes: {
-        HomeScreen.id: (_) => HomeScreen(),
+        HomeScreen.id: (_) => const HomeScreen(),
         OnboardingScreen.id: (_) => const OnboardingScreen(),
         //Next.id: (_) => const Next(),
       },
@@ -53,15 +53,14 @@ class HomeScreen extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, this.title, required this.vehicle}) : super(key: key);
-  final Vehicle vehicle;
+  const MyHomePage({Key? key, this.title}) : super(key: key);
   final String? title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   Timer? timer;
   final MapController _controller = MapController();
     double lat1 = 42;
@@ -94,45 +93,132 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     String nameSpace = 'atgps_receiver';
-    if (kIsWeb) {
-      connectWs();
-    } else {
+
       AtClientManager atClientManager = AtClientManager.getInstance();
       String? atSign = atClientManager.atClient.getCurrentAtSign();
       NotificationService notificationService = atClientManager.atClient.notificationService;
 
-      notificationService
-          .subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true)
-          .listen(((notification) async {
-        String? sendingAtsign = notification.from;
-        String? json = notification.key;
-        json = json.replaceFirst('@atgps_receiver:', '');
-        print(json);
-        if (notification.from == '@$nameSpace') {
-          print(json);
-          lookupVehicle(widget.vehicle, json);
-          setState(() {});
-        }
-      }));
+notificationService
+        .subscribe(regex: '@atgps_receiver:{"device":"car', shouldDecrypt: true)
+        .listen(((notification) async {
+      String? sendingAtsign = notification.from;
+      String? json = notification.key;
+      json = json.replaceFirst('@atgps_receiver:', '');
+      print(json);
+      int timeNow = DateTime.now().millisecondsSinceEpoch;
+      var decodeJson = jsonDecode(json.toString());
+      int timeSent = int.parse(decodeJson['Time']);
+      int timeDelay = timeNow - timeSent;
+      // if (timeSent > lastTime) {
+      //   lastTime = timeSent;
+      print('Time Delay: $timeDelay');
+      decodeJson['Time'] = '${timeDelay.toString()} ms';
+      String sendJson = jsonEncode(decodeJson);
+      car = decodeJson['device'];
+      print('car:$car');
+      if (car == 'car1') {
+        car1 = car;
+        long1 = double.parse(decodeJson['longitude']);
+        lat1 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      } 
+      if (car == 'car2'){
+        car2 = car;
+        long2 = double.parse(decodeJson['longitude']);
+        lat2 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      }
+      if (car == 'car3'){
+        car3 = car;
+        long3 = double.parse(decodeJson['longitude']);
+        lat3 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      }
+      if (car == 'car4'){
+        car4 = car;
+        long4 = double.parse(decodeJson['longitude']);
+        lat4 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      }
+      if (car == 'car5'){
+        car5 = car;
+        long5 = double.parse(decodeJson['longitude']);
+        lat5 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      }
+      if (car == 'car6'){
+        car6 = car;
+        long6 = double.parse(decodeJson['longitude']);
+        lat6 = double.parse(decodeJson['latitude']);
+        setState(() {});
+      }
+    }),
+            onError: (e) => print('Notification Failed:' + e.toString()),
+            onDone: () => print('Notification listener stopped'));
     }
-  }
+  
 
-  void connectWs() {
-    var channel = WebSocketChannel.connect(Uri.parse('wss://ws.kryzradio.org'));
-    channel.stream.listen((message) {
-      var json = message;
-      lookupVehicle(widget.vehicle, json);
-      setState(() {});
-    },
-        // reconnnect if the WS gets disconnected (yay!)
-        onDone: connectWs);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('atGPS'),
+        appBar: NewGradientAppBar(
+          gradient: const LinearGradient(colors: [
+            Color.fromARGB(255, 78, 173, 80),
+            Color.fromARGB(255, 108, 169, 197)
+          ]),
+          title: const AutoSizeText(
+         'atGPS',
+            minFontSize: 3,
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              color: const Color.fromARGB(255, 108, 169, 197),
+              //padding: const EdgeInsets.symmetric(horizontal: 10),
+              icon: const Icon(
+                Icons.menu,
+                size: 20,
+                color: Colors.black,
+              ),
+              onSelected: (String result) {
+                switch (result) {
+                  case 'Exit':
+                    exit(0);
+                  case 'Back':
+                    setState(() {
+                      Navigator.pushNamed(context, OnboardingScreen.id);
+                    });
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  height: 20,
+                  value: 'Back',
+                  child: Text(
+                    'Back',
+                    style: TextStyle(
+                        fontSize: 15,
+                        letterSpacing: 5,
+                        backgroundColor: Color.fromARGB(255, 108, 169, 197),
+                        color: Colors.black),
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  height: 20,
+                  value: 'Exit',
+                  child: Text(
+                    'Exit',
+                    style: TextStyle(
+                        fontSize: 15,
+                        letterSpacing: 5,
+                        backgroundColor: Color.fromARGB(255, 108, 169, 197),
+                        color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         body: SafeArea(
             child: Column(children: [
@@ -174,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car1,
+                              " $car1",
                               textAlign: TextAlign.right,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),
@@ -194,7 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car2,
+                              " $car2",
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),
@@ -214,7 +300,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car3,
+                              " $car3",
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),
@@ -234,7 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car4,
+                              " $car4",
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),
@@ -254,7 +340,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car5,
+                              " $car5",
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),
@@ -274,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               size: 40,
                             ),
                             Text(
-                              " " + car6,
+                              " $car6",
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
                             ),

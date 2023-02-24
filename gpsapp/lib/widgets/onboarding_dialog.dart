@@ -118,6 +118,7 @@ class OnboardingDialogState extends State<OnboardingDialog> {
         
         onPressed: () async {
           var atClientPreference = await loadAtClientPreference();
+          // ignore: use_build_context_synchronously
           final result = await AtOnboarding.onboard(
             context: context,
             atsign: atSign,
@@ -134,15 +135,19 @@ class OnboardingDialogState extends State<OnboardingDialog> {
             case AtOnboardingResultStatus.success:
               _atsign = result.atsign;
               
+                // ignore: use_build_context_synchronously
                 Navigator.pushNamed(context, HomeScreen.id);
               
               break;
             case AtOnboardingResultStatus.error:
+                // ignore: use_build_context_synchronously
                 Navigator.pushNamed(context, OnboardingScreen.id);
+              // ignore: use_build_context_synchronously
               _handleError(context);
               break;
             case AtOnboardingResultStatus.cancel:
               
+                // ignore: use_build_context_synchronously
                 Navigator.pushNamed(context, OnboardingScreen.id);
               
               break;

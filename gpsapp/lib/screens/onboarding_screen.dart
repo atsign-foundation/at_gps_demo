@@ -28,7 +28,7 @@ class OnboardingScreen extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.fromARGB(255, 240, 181, 178),
+                    Color.fromARGB(255, 78, 173, 80),
                     Color.fromARGB(255, 171, 200, 224)
                   ],
                 )
@@ -36,7 +36,7 @@ class OnboardingScreen extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.fromARGB(255, 240, 181, 178),
+                    Color.fromARGB(255, 78, 173, 80),
                     Color.fromARGB(255, 171, 200, 224)
                   ],
                 ),

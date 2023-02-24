@@ -14,15 +14,14 @@ import 'package:window_manager/window_manager.dart';
 Future<void> main() async {
   // Must add this line.
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
-  } else {
+
     if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
       await windowManager.ensureInitialized();
 
       WindowOptions windowOptions = const WindowOptions(
-        size: Size(425, 720),
-        maximumSize: Size(425, 720),
-        minimumSize: Size(425, 720),
+        size: Size(1024, 768),
+        // maximumSize: Size(425, 720),
+        minimumSize: Size(640, 480),
         center: true,
         backgroundColor: Colors.transparent,
         skipTaskbar: false,
@@ -33,7 +32,7 @@ Future<void> main() async {
         await windowManager.focus();
       });
     }
-  }
+  
 
   runApp(const MyApp());
 }

@@ -3,7 +3,7 @@ import 'package:gpsapp/models/vehiclemodel.dart';
 import 'dart:convert';
 
 void lookupVehicle(Vehicle vehicle, String result) async {
-  var localVehicle = Vehicle(vehicleName: 'stationName', longitude: '0', latitude: '0');
+  var localVehicle = Vehicle(vehicleName: 'stationName');
 
   localVehicle = Vehicle.fromJson(json.decode(result));
   vehicle.vehicleName = localVehicle.vehicleName;
