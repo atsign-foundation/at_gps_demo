@@ -1,6 +1,11 @@
 # Files and directories created by pub.
 .dart_tool/
 .packages
+pubspeck.lock
 
 # Conventional directory for build output.
 build/
+
+# Secret Map key
+api_key.dart
+
