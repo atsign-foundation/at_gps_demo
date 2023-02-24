@@ -1,20 +1,20 @@
 class Vehicle {
   String vehicleName;
-  double? latitude;
-  double? longitude;
-  double? speed;
-  String? time;
+  double latitude;
+  double longitude;
+  double speed;
+  String time;
 
   Vehicle({
     required this.vehicleName,
-    this.latitude,
-    this.longitude,
-    this.speed,
-    this.time
+    this.latitude = 0,
+    this.longitude = 0,
+    this.speed = 0,
+    this.time = "0"
   });
 
   Vehicle.fromJson(Map<String, dynamic> json)
-      : vehicleName = json['vechileName'],
+      : vehicleName = json['vehicleName'],
         latitude = json['latitude'],
         longitude = json['longitude'],
         speed = json['speed'],
@@ -30,5 +30,23 @@ class Vehicle {
         'time': time
       };
 
+  @override
+  bool operator ==(Object other) {
+    if (other is Vehicle) {
+      return vehicleName == other.vehicleName;
+    }
+    return false;
+  }
+  
+  @override
+  int get hashCode => vehicleName.hashCode;
+  
+  
+  
+  
+  
+  
+
+  
 
 }
