@@ -194,7 +194,7 @@ packages:
     source: hosted
     version: "3.0.0"
   biometric_storage:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: biometric_storage
       sha256: f6d7f5f4c28323797658423e4c5982c9dee42e18f59a8a8d4bc5df38eaf2e2f1
